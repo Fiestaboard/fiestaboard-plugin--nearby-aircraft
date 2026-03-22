@@ -168,7 +168,7 @@ NEARBY_AIRCRAFT_REFRESH_SECONDS=120   # Default: 120 seconds (2 min)
 
 ### Default Format (Matches Screenshot)
 
-![Nearby Aircraft Display](./nearby-aircraft-display.png)
+![Nearby Aircraft Display](./board-display.png)
 
 ```
 {center}NEARBY AIRCRAFT
