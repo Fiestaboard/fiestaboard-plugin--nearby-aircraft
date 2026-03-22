@@ -2,7 +2,7 @@
 
 Display real-time nearby aircraft information from the OpenSky Network API.
 
-![Nearby Aircraft Display](./docs/nearby-aircraft-display.png)
+![Nearby Aircraft Display](./docs/board-display.png)
 
 **→ [Setup Guide](./docs/SETUP.md)** - Configuration and optional OAuth setup
 
