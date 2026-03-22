@@ -1,6 +1,8 @@
 """Unit tests for Nearby Aircraft plugin."""
 
+import json
 import pytest
+from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timedelta, timezone
 
@@ -895,3 +897,70 @@ class TestCaching:
         result2 = plugin.fetch_data()
         assert result2.available is True
         assert mock_get.call_count == 2
+
+
+class TestManifestMetadata:
+    """Test manifest contains rich variable metadata."""
+
+    @pytest.fixture(autouse=True)
+    def load_manifest(self):
+        manifest_path = Path(__file__).parent.parent / "manifest.json"
+        with open(manifest_path) as f:
+            self.manifest = json.load(f)
+
+    def test_required_top_level_fields(self):
+        for field in ("id", "name", "version", "variables"):
+            assert field in self.manifest, f"Missing required field: {field}"
+
+    def test_simple_variables_are_dicts(self):
+        simple = self.manifest["variables"]["simple"]
+        assert isinstance(simple, dict), "variables.simple must be a dict, not a list"
+        for key, meta in simple.items():
+            assert isinstance(meta, dict), f"Variable '{key}' metadata must be a dict"
+
+    def test_simple_variable_required_keys(self):
+        required_keys = {"description", "type", "max_length", "group", "example"}
+        for key, meta in self.manifest["variables"]["simple"].items():
+            missing = required_keys - set(meta.keys())
+            assert not missing, f"Variable '{key}' is missing keys: {missing}"
+
+    def test_simple_variable_types(self):
+        valid_types = {"string", "number"}
+        for key, meta in self.manifest["variables"]["simple"].items():
+            assert meta["type"] in valid_types, (
+                f"Variable '{key}' has invalid type '{meta['type']}'"
+            )
+
+    def test_groups_defined(self):
+        groups = self.manifest["variables"]["groups"]
+        assert isinstance(groups, dict)
+        assert len(groups) > 0
+
+    def test_all_variable_groups_exist(self):
+        groups = set(self.manifest["variables"]["groups"].keys())
+        for key, meta in self.manifest["variables"]["simple"].items():
+            assert meta["group"] in groups, (
+                f"Variable '{key}' references unknown group '{meta['group']}'"
+            )
+
+    def test_groups_have_labels(self):
+        for gid, gmeta in self.manifest["variables"]["groups"].items():
+            assert "label" in gmeta, f"Group '{gid}' is missing a label"
+
+    def test_arrays_section(self):
+        arrays = self.manifest["variables"]["arrays"]
+        assert "aircraft" in arrays
+        assert "label_field" in arrays["aircraft"]
+        assert "item_fields" in arrays["aircraft"]
+        assert len(arrays["aircraft"]["item_fields"]) > 0
+
+    def test_max_lengths_present(self):
+        assert "max_lengths" in self.manifest
+        for key in self.manifest["max_lengths"]:
+            assert key.startswith("aircraft.*."), (
+                f"Unexpected max_lengths key '{key}'"
+            )
+
+    def test_examples_are_non_empty(self):
+        for key, meta in self.manifest["variables"]["simple"].items():
+            assert meta["example"] != "", f"Variable '{key}' has empty example"
