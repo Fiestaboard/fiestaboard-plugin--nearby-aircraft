@@ -1,7 +1,7 @@
 {
   "id": "nearby_aircraft",
   "name": "Nearby Aircraft",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Display real-time nearby aircraft information from OpenSky Network API",
   "author": "FiestaBoard Team",
   "repository": "https://github.com/Fiestaboard/fiestaboard-plugin--nearby-aircraft",
@@ -217,5 +217,43 @@
       "caption": "Display real-time nearby aircraft information from OpenSky Network API",
       "primary": true
     }
-  ]
+  ],
+  "demo": {
+    "name": "Nearby Aircraft Demo",
+    "device_type": "flagship",
+    "template": [
+      "Nearby Aircraft",
+      "{{nearby_aircraft.headers}}",
+      "{{nearby_aircraft.formatted}}",
+      "",
+      "",
+      "Tracked {{nearby_aircraft.aircraft_count}}"
+    ],
+    "line_metadata": [
+      {
+        "alignment": "center",
+        "wrap": false
+      },
+      {
+        "alignment": "left",
+        "wrap": false
+      },
+      {
+        "alignment": "left",
+        "wrap": true
+      },
+      {
+        "alignment": "left",
+        "wrap": false
+      },
+      {
+        "alignment": "left",
+        "wrap": false
+      },
+      {
+        "alignment": "center",
+        "wrap": false
+      }
+    ]
+  }
 }
