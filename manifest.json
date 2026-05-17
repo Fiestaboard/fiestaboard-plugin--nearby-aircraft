@@ -1,7 +1,7 @@
 {
   "id": "nearby_aircraft",
   "name": "Nearby Aircraft",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Display real-time nearby aircraft information from OpenSky Network API",
   "author": "FiestaBoard Team",
   "repository": "https://github.com/Fiestaboard/fiestaboard-plugin--nearby-aircraft",
