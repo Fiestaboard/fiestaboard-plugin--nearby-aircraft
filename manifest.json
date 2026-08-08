@@ -218,6 +218,28 @@
       "primary": true
     }
   ],
+  "teaser": "UAL1234 35000FT",
+  "previews": [
+    {
+      "device_type": "flagship",
+      "rows": [
+        "{67}{67}{67}{67}{67}{67}{67}{67}{67}{67}{67}{67}{67}{67}{67}{67}{67}{67}{67}{67}{67}{67}",
+        "UAL 1532 B738 12000 FT",
+        "SWA 445  B737  8200 FT",
+        "DAL 892  A321 15400 FT",
+        "AAL 210  B789 22100 FT",
+        "SKW 5412 E175  6500 FT"
+      ]
+    },
+    {
+      "device_type": "note",
+      "rows": [
+        "NEARBY AIRCRAFT",
+        "UAL1234 35000ft",
+        "4 TRACKED"
+      ]
+    }
+  ],
   "demo": {
     "flagship": {
       "name": "Nearby Aircraft Demo",
