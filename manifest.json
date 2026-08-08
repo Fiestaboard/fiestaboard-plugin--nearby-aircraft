@@ -234,8 +234,8 @@
     {
       "device_type": "note",
       "rows": [
-        "NEARBY AIRCRAFT",
-        "UAL1234 35000ft",
+        "{67}{67} OVERHEAD",
+        "UAL1234 35000FT",
         "4 TRACKED"
       ]
     }
