@@ -898,6 +898,26 @@ class TestCaching:
         assert result2.available is True
         assert mock_get.call_count == 2
 
+    @patch('plugins.nearby_aircraft.requests.get')
+    def test_config_change_invalidates_cache(self, mock_get, plugin, sample_config, mock_opensky_states_response):
+        """Test a config change drops the cache instead of serving the old position."""
+        plugin.config = {**sample_config, "refresh_seconds": 300}
+        
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = mock_opensky_states_response
+        mock_get.return_value = mock_response
+        
+        plugin.fetch_data()
+        assert mock_get.call_count == 1
+        
+        # Same cache window, different position: the cached aircraft are now wrong
+        plugin.config = {**sample_config, "refresh_seconds": 300, "latitude": 40.7128, "longitude": -74.0060}
+        assert plugin._cache is None
+        
+        plugin.fetch_data()
+        assert mock_get.call_count == 2
+
 
 class TestManifestMetadata:
     """Test manifest contains rich variable metadata."""
