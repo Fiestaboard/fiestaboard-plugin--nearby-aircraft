@@ -93,6 +93,19 @@ class NearbyAircraftPlugin(PluginBase):
         
         return errors
     
+    def on_config_change(self, old_config: Dict[str, Any], new_config: Dict[str, Any]) -> None:
+        """Drop cached aircraft and token so a config change takes effect immediately.
+        
+        The cache is keyed only on age, so without this a change to
+        `latitude`/`longitude`/`radius_km` would keep serving aircraft found
+        around the old position for up to refresh_seconds. The access token
+        is minted from `client_id`/`client_secret`, so it goes too.
+        """
+        self._cache = None
+        self._access_token = None
+        self._token_expires_at = None
+        logger.debug("Cleared cached aircraft after config change")
+    
     @staticmethod
     def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         """Calculate distance between two points on Earth in km.
