@@ -6,6 +6,8 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timedelta, timezone
 
+from src.devices import BoardContext
+
 from plugins.nearby_aircraft import NearbyAircraftPlugin
 
 
@@ -88,10 +90,15 @@ class TestConfigurationValidation:
         assert any("Radius" in e for e in errors)
     
     def test_validate_config_invalid_max_aircraft_too_high(self, plugin):
-        """Test validation fails with max_aircraft > 10."""
-        config = {"latitude": 37.7749, "longitude": -122.4194, "max_aircraft": 11}
+        """Test validation fails with max_aircraft above the ceiling.
+
+        The ceiling is 24 (an 8x8 note_array's 24 rows), not a Flagship-sized
+        10 -- a fixed cap independent of board size would leave a large
+        FiestaPanel unable to use its own rows even at max configuration.
+        """
+        config = {"latitude": 37.7749, "longitude": -122.4194, "max_aircraft": 25}
         errors = plugin.validate_config(config)
-        assert any("Max aircraft" in e and "10" in e for e in errors)
+        assert any("Max aircraft" in e and "24" in e for e in errors)
     
     def test_validate_config_invalid_max_aircraft_too_low(self, plugin):
         """Test validation fails with max_aircraft < 1."""
@@ -917,6 +924,92 @@ class TestCaching:
         
         plugin.fetch_data()
         assert mock_get.call_count == 2
+
+
+class TestBoardGeometry:
+    """Test that display formatting adapts to the bound board."""
+
+    NOTE_BOARD = BoardContext(device_type="note", rows=3, cols=15)
+    FLAGSHIP_BOARD = BoardContext(device_type="flagship", rows=6, cols=22)
+
+    def test_align_formatting_narrow_board_fits_note(self, plugin):
+        """On a Note (15 cols), formatted/headers must fit -- not just be <=22."""
+        aircraft_list = [
+            {"call_sign": "VERYLONGCALLSIGN", "altitude": 40000, "ground_speed": 500, "squawk": "5678"}
+        ]
+        with plugin._bound_board(self.NOTE_BOARD):
+            aligned, headers = plugin._align_formatting(aircraft_list)
+
+        assert len(headers) <= 15
+        assert len(aligned[0]["formatted"]) <= 15
+
+    def test_align_formatting_wide_board_unchanged(self, plugin):
+        """A Flagship-or-wider board keeps the classic layout with full labels."""
+        with plugin._bound_board(self.FLAGSHIP_BOARD):
+            _, headers = plugin._align_formatting([])
+        assert headers == "CALLSGN ALT GS SQWK"
+
+    def test_format_aircraft_line_narrow_board_fits_note(self, plugin):
+        with plugin._bound_board(self.NOTE_BOARD):
+            formatted = plugin._format_aircraft_line("VERYLONGCALLSIGN", 40000, 393, "2513")
+        assert len(formatted) <= 15
+
+    def test_empty_result_message_fits_note(self, plugin):
+        """'NO AIRCRAFT NEARBY' (19 chars) alone overflows a Note (15 cols)."""
+        with plugin._bound_board(self.NOTE_BOARD):
+            data = plugin._empty_result_data()
+        assert len(data["formatted"]) <= 15
+
+    @patch('plugins.nearby_aircraft.requests.get')
+    def test_get_formatted_display_note_board(self, mock_get, plugin, sample_config, mock_opensky_states_response):
+        """get_formatted_display() must respect a Note's 3 rows x 15 cols."""
+        plugin.config = sample_config
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = mock_opensky_states_response
+        mock_get.return_value = mock_response
+
+        with plugin._bound_board(self.NOTE_BOARD):
+            lines = plugin.get_formatted_display()
+
+        assert lines is not None
+        assert len(lines) == 3
+        assert all(len(line) <= 15 for line in lines)
+
+    @patch('plugins.nearby_aircraft.requests.get')
+    def test_cache_reused_across_boards_does_not_leak_widths(
+        self, mock_get, plugin, sample_config, mock_opensky_states_response
+    ):
+        """A fetch cached while rendering a Flagship must still fit a Note.
+
+        This is the failure class the plugin's own self._cache used to
+        cause: it stored already-22-char-formatted strings keyed only by
+        data age, so a board-narrower render after a wide one would replay
+        the wide board's column widths. self._cache now holds only raw
+        fields and formatting is derived fresh per call (see
+        _build_result_data), so the same cached fetch must fit both boards.
+        """
+        plugin.config = {**sample_config, "refresh_seconds": 300}
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = mock_opensky_states_response
+        mock_get.return_value = mock_response
+
+        with plugin._bound_board(self.FLAGSHIP_BOARD):
+            wide_result = plugin.fetch_data()
+        assert mock_get.call_count == 1
+
+        # Same cache window (refresh_seconds=300), different board: no new
+        # network call, but the formatting must be re-derived for the Note.
+        with plugin._bound_board(self.NOTE_BOARD):
+            narrow_result = plugin.fetch_data()
+        assert mock_get.call_count == 1
+
+        assert len(narrow_result.data["formatted"]) <= 15
+        for ac in narrow_result.data["aircraft"]:
+            assert len(ac["formatted"]) <= 15
+        # The wide render is untouched by the narrow one having run.
+        assert len(wide_result.data["formatted"]) <= 22
 
 
 class TestManifestMetadata:

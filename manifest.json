@@ -1,7 +1,7 @@
 {
   "id": "nearby_aircraft",
   "name": "Nearby Aircraft",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "Display real-time nearby aircraft information from OpenSky Network API",
   "author": "FiestaBoard Team",
   "repository": "https://github.com/Fiestaboard/fiestaboard-plugin--nearby-aircraft",
@@ -52,10 +52,10 @@
       "max_aircraft": {
         "type": "integer",
         "title": "Max Aircraft",
-        "description": "Maximum number of aircraft to display (1-10)",
+        "description": "Maximum number of aircraft to display (1-24). The board actually rendered on may show fewer if it doesn't have enough rows.",
         "default": 4,
         "minimum": 1,
-        "maximum": 10
+        "maximum": 24
       },
       "refresh_seconds": {
         "type": "integer",
@@ -171,7 +171,7 @@
       "aircraft_count": {
         "description": "Number of nearby aircraft detected",
         "type": "number",
-        "max_length": 1,
+        "max_length": 2,
         "group": "display",
         "example": "4"
       },
@@ -237,6 +237,20 @@
         "{67}{67} OVERHEAD",
         "UAL1234 35000FT",
         "4 TRACKED"
+      ]
+    },
+    {
+      "label": "Note Array (2x2)",
+      "device_type": "note_array",
+      "notes_wide": 2,
+      "notes_tall": 2,
+      "rows": [
+        "      NEARBY AIRCRAFT",
+        "CALLSGN    ALT    SPD  SQWK",
+        "UAL1532  12000FT 340KT 4610",
+        "SWA445    8200FT 310KT 1200",
+        "DAL892   15400FT 410KT 5521",
+        "4 AIRCRAFT TRACKED OVERHEAD"
       ]
     }
   ],
