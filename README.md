@@ -262,7 +262,7 @@ The `headers` variable uses the same column widths as the aircraft data, ensurin
 - `radius_km`: Search radius (default: 50)
 - `client_id`: OAuth2 client ID
 - `client_secret`: OAuth2 client secret
-- `max_aircraft`: Maximum to display (default: 4, max: 10)
+- `max_aircraft`: Maximum to display (default: 4, max: 24; the board actually rendered on may show fewer)
 - `refresh_seconds`: Update interval (default: 120, min: 10)
 
 ### Validation
@@ -270,7 +270,7 @@ The `headers` variable uses the same column widths as the aircraft data, ensurin
 - Latitude: -90 to 90
 - Longitude: -180 to 180
 - Radius: >= 1 km
-- Max aircraft: 1 to 10
+- Max aircraft: 1 to 24
 - Refresh: >= 10 seconds
 
 ## Template Variables
